@@ -95,24 +95,23 @@ class EcomDev_ProductPageShipping_Model_Estimate
     /**
      * Retrieve product for the estimation
      */
-        public function getProduct()
-        {
-            //Verify if the product is configurable, since configurable products doesn’t have weight to estimate
-            if($this->_product->isConfigurable()){
-                //For convenience, creates a new variable just for our product
-                $configurableProduct = $this->_product;
-                //Load an array with all the associated products
-                $associated_products = $configurableProduct->loadByAttribute('sku', $configurableProduct->getSku())->getTypeInstance()->getUsedProducts();
-                //Run foreach just once to get the first of the associated products
-                foreach($associated_products as $assoc){
-                    $this->_product = $assoc;
-                    break;
-                }
-                //Return the product
-                return $this->_product;
-            }
-            return $this->_product;
+    public function getProduct()
+    {
+        //Verify if the product is configurable, since configurable products doesn’t have weight to estimate
+        if($this->_product->isConfigurable()){
+
+            $addToCartInfo = (array) $this->_product->getAddToCartInfo();
+             //Find simple product
+            $simple_product = Mage::getModel('catalog/product_type_configurable')->getProductByAttributes($addToCartInfo['super_attribute'],$this->_product);
+            
+           //Replace by simple product
+            $this->_product = Mage::getModel('catalog/product')->load($simple_product->getId());
+ 
+            //Return the simple product
+           return $this->_product;
         }
+         return $this->_product;
+    }
 
     /**
      * Retrieve shipping rate result
